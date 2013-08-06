@@ -14,7 +14,7 @@ var constants = {
 	max_heart_rate:190,
 	conversion_step:1024, //amount of tacks processed in one instance. lower = better results.
 	drawing_step:4,
-	clarity:2, //larger the number, more approximated the map is. Also better preformance.
+	clarity:1, //larger the number, more approximated the map is. Also better preformance.
 	map_padding:150
 }
 
@@ -127,9 +127,6 @@ CanvasPlotter.prototype.getBounds = function()
 	return {   "sW":$(this.canvas).width()-constants.map_padding,   "sH":$(this.canvas).height()-constants.map_padding    }
 }
 
-
-
-
 //////////////////////////////////////////// Plotting functions ////////////////////////////////////////////
 
 
@@ -204,19 +201,24 @@ function extrudedPlot(plotter, bounds, range, tracks)
 			var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
 			var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
 			var hr_a = tracks[i].hr/constants.max_heart_rate;
-			
-			
-			
-			var c = "rgb(255,0,0)";
-			var eC = "rgba("+(5+(250*hr_a))+",5,5,.2)";
-			
+						
 			if(colorStep >= 255) cD = false;
 			else if(colorStep <= 0) cD = true;
-			cD ? colorStep++ : colorStep--;
+			cD ? colorStep+=1 : colorStep-=1;
 			
+			//var c = "rgba(255,0,0,.1) ";
+			//var eC = "rgba("+(5+(250*hr_a))+",5,5,.2)";
+			var r = 255
+			var g = Math.ceil(10 + (215*z));
+			var b = Math.ceil(10 + (100*z));
+			var c = "rgba("+r+","+g+","+b+",.2)";
+			var eC = "rgba("+r+","+g+","+b+",.1)";
+			//eC = c;
 			if(first){
+				//console.log( eC );
 				first = false;
-			} 
+			}
+			 
 			plotter.drawPoint(x,y,1,c);
 			plotter.drawPoint(x,y - (150*z),1,c);
 			plotter.drawLine(  x,  y, x,  y - (150*z),  1,eC)
