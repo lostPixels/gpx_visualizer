@@ -1,7 +1,7 @@
 $(function()
 {
 	$.ajax({
-		url:"gpx/activity_2.gpx",
+		url:"gpx/short.gpx",
 		complete:parseGPX
 	})
 		
@@ -15,7 +15,7 @@ var constants = {
 	conversion_step:1024, //amount of tacks processed in one instance. lower = better results.
 	drawing_step:4,
 	clarity:1, //larger the number, more approximated the map is. Also better preformance.
-	map_padding:150
+	map_padding:225
 }
 
 function parseGPX(e)
@@ -206,22 +206,20 @@ function extrudedPlot(plotter, bounds, range, tracks)
 			else if(colorStep <= 0) cD = true;
 			cD ? colorStep+=1 : colorStep-=1;
 			
-			//var c = "rgba(255,0,0,.1) ";
-			//var eC = "rgba("+(5+(250*hr_a))+",5,5,.2)";
 			var r = 255
 			var g = Math.ceil(10 + (215*z));
 			var b = Math.ceil(10 + (100*z));
 			var c = "rgba("+r+","+g+","+b+",.2)";
 			var eC = "rgba("+r+","+g+","+b+",.1)";
-			//eC = c;
+
 			if(first){
 				//console.log( eC );
 				first = false;
 			}
 			 
 			plotter.drawPoint(x,y,1,c);
-			plotter.drawPoint(x,y - (150*z),1,c);
-			plotter.drawLine(  x,  y, x,  y - (150*z),  1,eC)
+			plotter.drawPoint(x,y - (170*z),3*hr_a,c);
+			plotter.drawLine(  x,  y, x,  y - (170*z),  1,eC)
 		}
 		offset += constants.drawing_step;
 		if(offset < totalLength) setTimeout(plotStep,10);
