@@ -411,6 +411,23 @@ function renderedPlot(plotter, bounds, range, tracks)
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function mountainPlot(plotter, bounds, range, tracks)
 {
 	var totalLength = tracks.length;
@@ -439,27 +456,98 @@ function mountainPlot(plotter, bounds, range, tracks)
 			var hr_a = tracks[i].hr/constants.max_heart_rate;
 
 			var base = 100 * z
-			var p1X = x - (base/2)
+			var falloff = 25-(25*z);
+			var p1X = x - (base/2) -(falloff)
 			var p1Y = y;
 			var p2X = x;
 			var p2Y = y - base;
-			var p3X = x + (base/2)
+			var p3X = x + (base/2) +(falloff)
 			var p3Y = y;
 			
 			var color = 0;
 			var a = 1//.1 + (.9 * (i/totalLength) );
 
 			var c = "rgba("+(66+parseInt(100*z))+","+(46+parseInt(100*z))+","+(26+parseInt(100*z))+","+a+")"
-			console.log(c,z)
 			if(colorStep >= 255) cD = false;
 			else if(colorStep <= 0) cD = true;
 			cD ? colorStep++ : colorStep--;
 			
 			if(first){
 				first = false;
-			} 
-			plotter.drawTriangle(p1X,p1Y,p2X,p2Y,p3X,p3Y,2,c);
-			plotter.drawPoint(x,p2Y,6*z,'rgba(255,255,255,1');
+			}
+			var grd = plotter.ctx.createLinearGradient(p1X,p1Y,p2X,p2Y);
+			grd.addColorStop(0,"#598415");
+			grd.addColorStop(1,"82cf08");
+
+			plotter.drawTriangle(p1X,p1Y,p2X,p2Y,p3X,p3Y,2,grd);
+			plotter.drawPoint(x,p2Y,6*z,'rgba(150,238,10,.5');
+		}
+		offset += constants.drawing_step;
+		if(offset < totalLength) setTimeout(plotStep,10);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function waveyPlot(plotter, bounds, range, tracks)
+{
+	var totalLength = tracks.length;
+	var offset = 0;
+	var dist;
+	var scale_offset = constants.map_padding/2;
+	
+	i = 0;
+	var first = true;
+	
+	var colorStep = 0;
+	var cD = true;
+	plotStep();
+
+	var simplified_array = simplifyArray(tracks,10);
+	console.log(simplified_array);
+
+	function plotStep()
+	{
+		dist = offset + constants.drawing_step;
+		if(dist > totalLength) dist = totalLength;
+		var first = true;
+		for(i=offset; i<dist; i++)
+		{
+			var lonNV = tracks[i].lon
+			var latNV = tracks[i].lat
+			
+			var x = scale_offset+ (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
+			var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
+			var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
+			var hr_a = tracks[i].hr/constants.max_heart_rate;
+						
+			if(colorStep >= 255) cD = false;
+			else if(colorStep <= 0) cD = true;
+			cD ? colorStep+=1 : colorStep-=1;
+			
+			var r = 255
+			var g = Math.ceil(10 + (215*z));
+			var b = Math.ceil(10 + (100*z));
+			var c = "rgba("+r+","+g+","+b+",.2)";
+			var eC = "rgba("+r+","+g+","+b+",.1)";
+
+			if(first){
+				//console.log( eC );
+				first = false;
+			}
+			 
+			plotter.drawPoint(x,y,1,c);
+			plotter.drawPoint(x,y - (170*z),3*hr_a,c);
+			plotter.drawLine(  x,  y, x,  y - (170*z),  1,eC)
 		}
 		offset += constants.drawing_step;
 		if(offset < totalLength) setTimeout(plotStep,10);

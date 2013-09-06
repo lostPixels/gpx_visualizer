@@ -1,7 +1,7 @@
 $(function()
 {
 	$.ajax({
-		//url:"gpx/activity_2.gpx",
+		//url:"gpx/activity.gpx",
 		url:"gpx/new.gpx",
 		complete:parseGPX
 	})
@@ -13,7 +13,8 @@ var constants = {
 	//render_technique:basicPlot,
 	//render_technique:extrudedPlot,
 	//render_technique:renderedPlot,
-	render_technique:mountainPlot,
+	//render_technique:mountainPlot,
+	render_technique:waveyPlot,
 	
 	max_heart_rate:190,
 	conversion_step:2000, //amount of tracks processed in one instance. lower = better results.
@@ -31,6 +32,7 @@ function parseGPX(e)
 		plotPoints(tracks_ar,range);
 	});
 }
+
 function convertData(tracks,cB)
 {
 	var lonRange = [parseFloat(tracks[1].attributes.getNamedItem("lon").nodeValue) , parseFloat(tracks[1].attributes.getNamedItem("lon").nodeValue)];
@@ -103,11 +105,15 @@ function convertData(tracks,cB)
 		offset += constants.conversion_step;
 		if(offset < totalLength) setTimeout(analyze,40);
 		else{
+
+			var center = {
+				"centerLat" : latRange[1] - (latRange[0]/2),
+				"centerLong" : lonRange[1] - (lonRange[0]/2)
+			}
+
 			$(".status-text").html("<strong>lowest points:</strong>"+lonRange[0]+","+latRange[0]+" <br><strong>highest points:</strong>"+lonRange[1]+","+latRange[1]+"<br> length: "+tracks_ar.length);
-			
 			tracks_ar.sort(sortByLat);
-			
-			cB({"lonRange":lonRange, "latRange":latRange, "eleRange":eleRange},tracks_ar);
+			cB({"lonRange":lonRange, "latRange":latRange, "eleRange":eleRange, "center":center},tracks_ar);
 		}
 	}
 }
@@ -122,12 +128,22 @@ function plotPoints(tracks, range)
 {
 	var plotter = new CanvasPlotter('main-canvas');
 	var bounds = plotter.getBounds();
-	tracks.sort(sortByLat);
+	//tracks.sort(sortByLat);
 	constants.render_technique(plotter, bounds, range, tracks)
 }
 
 
-
+function simplifyArray(ar,newLength)
+{
+	var len = ar.length;
+	var tmp = new Array();
+	for(var i = 1; i<=newLength;i++)
+	{
+		var s = Math.floor(  (len/newLength-1) * i  );
+		tmp.push(  ar[s] );
+	}
+	return tmp;
+}
 
 
 
