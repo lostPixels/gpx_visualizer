@@ -13,6 +13,7 @@
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
 
         <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
         <link rel="stylesheet" href="css/main.css">
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
     </head>
@@ -20,14 +21,27 @@
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
+        <div ng-app="homepage">
+            <div class="home" ng-controller="welcome">
+            <h1>hi</h1>
+            <ul>
+                <li ng-repeat="ride in recent_rides">
+                 {{ride.title}} - <em>{{ride.thumbnail}}</em>
+               </li>
+            </ul>
 
-        <!-- Add your site or application content here -->
-        <p class="status-text"></p>
-        <canvas id="main-canvas" width="1000" height="1000"></canvas>
+            </div>
+        </div>
+
+
+
+        <!--<p class="status-text"></p>
+        <canvas id="main-canvas" width="1000" height="1000"></canvas>-->
         
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.2.min.js"><\/script>')</script>
+        <script type="text/javascript" src="js/vendor/angular.min.js"></script>
         <script src="js/plugins.js"></script>
         <script src="js/render.js"></script>
         <script src="js/main.js"></script>        
