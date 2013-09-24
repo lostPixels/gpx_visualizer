@@ -2,7 +2,7 @@
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" ng-app='gpxRide'> <!--<![endif]-->
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -21,19 +21,7 @@
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-        <div ng-app="homepage">
-            <div class="home" ng-controller="welcome">
-            <h1>hi</h1>
-            <ul>
-                <li ng-repeat="ride in recent_rides">
-                 {{ride.title}} - <em>{{ride.thumbnail}}</em>
-               </li>
-            </ul>
-
-            </div>
-        </div>
-
-
+        <div ng-view></div>
 
         <!--<p class="status-text"></p>
         <canvas id="main-canvas" width="1000" height="1000"></canvas>-->

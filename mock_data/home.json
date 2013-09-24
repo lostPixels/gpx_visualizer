@@ -1,7 +1,7 @@
 {
 	"recent_rides":[
-			{"id":"123456789","title":"Some Test Ride","thumbnail":"img/homepage_thumbnail.jpg"},
-			{"id":"123456789","title":"Some Test Ride","thumbnail":"img/homepage_thumbnail.jpg"},
-			{"id":"123456789","title":"Some Test Ride","thumbnail":"img/homepage_thumbnail.jpg"}
+			{"id":"123456789","title":"Some Test Ride 1","thumbnail":"img/user_thumbs/homepage_thumbnail.jpg"},
+			{"id":"123456789","title":"Some Test Ride 2","thumbnail":"img/user_thumbs/homepage_thumbnail.jpg"},
+			{"id":"123456789","title":"Some Test Ride 3","thumbnail":"img/user_thumbs/homepage_thumbnail.jpg"}
 	]
 }

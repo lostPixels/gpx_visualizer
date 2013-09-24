@@ -1,0 +1,8 @@
+.home .featured li {
+  display: inline-block;
+}
+.home .featured li img {
+  display: block;
+  width: 200px;
+  height: 100px;
+}
