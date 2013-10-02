@@ -1,11 +1,11 @@
-$(function()
-{
-	$.ajax({
-		//url:"gpx/activity.gpx",
-		url:"gpx/new.gpx",
-		complete:parseGPX
-	})
-});
+// $(function()
+// {
+// 	$.ajax({
+// 		//url:"gpx/activity.gpx",
+// 		url:"gpx/new.gpx",
+// 		complete:parseGPX
+// 	})
+// });
 
 var constants = {
 	
