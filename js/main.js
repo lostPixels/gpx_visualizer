@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('gpxRide', []).
+var app = angular.module('gpxRide', ['angularFileUpload']).
   config(['$routeProvider', function($routeProvider) {
   $routeProvider.
       when('/new', {templateUrl: 'partials/new-ride.html', controller: 'newRideController'}).
@@ -17,7 +17,7 @@ app.controller('welcomeController',function($scope, $http) {
         });
 });
 
-app.controller('newRideController',function($scope) {
+app.controller('newRideController',function($scope, $http) {
 
   var tmp = new Array();
   for(var i = 0; i< renderingOptions.length; i++)
@@ -26,6 +26,23 @@ app.controller('newRideController',function($scope) {
   }
   $scope.renderOptions = tmp;
   $scope.user_options = {rideName:'',renderTechnique:'',file:'',isPrivate:''}
+
+  $scope.selectedFiles = [];
+  $scope.onFileSelect = function($files) {
+	    //$files: an array of files selected, each file has name, size, and type.
+	    for (var i = 0; i < $files.length; i++) {
+	      var $file = $files[i];
+	      console.log($scope.myModelObj)
+	      $http.uploadFile({
+	        url: 'file_manager.php', //upload.php script, node.js route, or servlet upload url)
+	        data: {myObj: 'hi'}, //$scope.myModelObj
+	        file: $file
+	      }).then(function(data, status, headers, config) {
+	        // file is uploaded successfully
+	        console.log(data);
+	      }); 
+	    }
+	}
 });
 
 app.controller('viewRideController',function($scope, $http) {
@@ -37,6 +54,26 @@ app.controller('viewRideController',function($scope, $http) {
 
 
 
+
+
+
+// var MyCtrl = [ '$scope', '$http', function($scope, $http) {
+//   $scope.onFileSelect = function($files) {
+//     //$files: an array of files selected, each file has name, size, and type.
+//     for (var i = 0; i < $files.length; i++) {
+//       var $file = $files[i];
+//       console.log($scope.myModelObj)
+//       $http.uploadFile({
+//         url: 'file_manager.php', //upload.php script, node.js route, or servlet upload url)
+//         data: {myObj: $scope.myModelObj},
+//         file: $file
+//       }).then(function(data, status, headers, config) {
+//         // file is uploaded successfully
+//         console.log(data);
+//       }); 
+//     }
+//   }
+// }];
 
 
 
