@@ -1,0 +1,13 @@
+<div class="home col-md-6 col-md-offset-3">
+    <h1>Lorem Ipsum</h1>
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cill</p>
+    <a class="btn btn-primary btn-lg" href="#/edit/new">Plot my ride &raquo;</a>
+    <ul class="featured">
+        <li ng-repeat="ride in recent_rides">
+         {{ride.title}}
+         <a href="#/ride/{{ride.id}}">
+            <img ng-src="{{ride.thumbnail}}" />
+         </a>
+       </li>
+    </ul>
+</div>

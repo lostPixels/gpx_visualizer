@@ -1,0 +1,12 @@
+[
+    {
+        "id": 0,
+        "guid": "ac96e626-6fae-42d0-acf8-c7944a647780",
+        "title": "Teraprene",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1366539583948,
+        "render_mode": "basic"
+    }
+]

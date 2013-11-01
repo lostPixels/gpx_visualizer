@@ -1,0 +1,202 @@
+[
+    {
+        "id": 0,
+        "guid": "ac96e626-6fae-42d0-acf8-c7944a647780",
+        "title": "Teraprene",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1366539583948,
+        "render_mode": "basic"
+    },
+    {
+        "id": 1,
+        "guid": "ef67109b-5c2f-4c17-ab96-7a46e08e7f5c",
+        "title": "Isostream",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1373369155544,
+        "render_mode": "basic"
+    },
+    {
+        "id": 2,
+        "guid": "96734ce9-f080-44ad-b7ff-a870ab4848fa",
+        "title": "Jamnation",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1342549138410,
+        "render_mode": "basic"
+    },
+    {
+        "id": 3,
+        "guid": "1da4a87b-7578-4c57-979a-226aa6544acc",
+        "title": "Kyagoro",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1365555165288,
+        "render_mode": "basic"
+    },
+    {
+        "id": 4,
+        "guid": "554ee4b4-b607-40ae-a0ce-51fc4fc98ee3",
+        "title": "Zerbina",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1362321641900,
+        "render_mode": "basic"
+    },
+    {
+        "id": 5,
+        "guid": "0e9600ca-ce95-45fd-bf6a-1eacbff18f69",
+        "title": "Zanilla",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1367942496586,
+        "render_mode": "basic"
+    },
+    {
+        "id": 6,
+        "guid": "14f909ff-6e6e-49c6-b759-73b6d177ed65",
+        "title": "Overplex",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1334889625174,
+        "render_mode": "basic"
+    },
+    {
+        "id": 7,
+        "guid": "8a4d717b-43b2-4304-9ec1-bf5ab3b4fd41",
+        "title": "Xoggle",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1363316341966,
+        "render_mode": "basic"
+    },
+    {
+        "id": 8,
+        "guid": "f1ce0ebd-275f-4478-a0de-8477256621a6",
+        "title": "Optique",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1358387459604,
+        "render_mode": "basic"
+    },
+    {
+        "id": 9,
+        "guid": "b31dfb9a-2a47-4305-b174-bc9547bd3541",
+        "title": "Zilencio",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1343502234200,
+        "render_mode": "basic"
+    },
+    {
+        "id": 10,
+        "guid": "e3cfad0b-ac63-4a29-b50a-dec70aae2aa8",
+        "title": "Ronelon",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1343610690719,
+        "render_mode": "basic"
+    },
+    {
+        "id": 11,
+        "guid": "2f515901-1565-4b74-ba3c-8ea4c9a808b3",
+        "title": "Hydrocom",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1345131744408,
+        "render_mode": "basic"
+    },
+    {
+        "id": 12,
+        "guid": "07ecdd58-c9b5-426d-b47d-ae08b661500f",
+        "title": "Plutorque",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1375630793336,
+        "render_mode": "basic"
+    },
+    {
+        "id": 13,
+        "guid": "28b3d03e-849b-4e7b-b90a-eaaff8943006",
+        "title": "Silodyne",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1336071444942,
+        "render_mode": "basic"
+    },
+    {
+        "id": 14,
+        "guid": "797ca79d-366d-4a95-bedb-4b480a00ab2f",
+        "title": "Ultrasure",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1366285078227,
+        "render_mode": "basic"
+    },
+    {
+        "id": 15,
+        "guid": "b2868713-d5db-4c2f-b9bb-56086709c188",
+        "title": "Securia",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1370560884463,
+        "render_mode": "basic"
+    },
+    {
+        "id": 16,
+        "guid": "2286f55c-457f-4f60-8162-e549aff8245c",
+        "title": "Bisba",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1351711101887,
+        "render_mode": "basic"
+    },
+    {
+        "id": 17,
+        "guid": "b792f4d4-6f7f-47ef-9739-100c1d2e7760",
+        "title": "Vicon",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1372537196869,
+        "render_mode": "basic"
+    },
+    {
+        "id": 18,
+        "guid": "ef6127af-433d-40e6-b9ec-1122f0fb5067",
+        "title": "Vortexaco",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1373028878238,
+        "render_mode": "basic"
+    },
+    {
+        "id": 19,
+        "guid": "998bbf3c-e734-48f3-a20a-14242dcfa855",
+        "title": "Zilidium",
+        "author": "{{ \"[object Object]\" tag is not supported }}",
+        "gpx": "sample_ride.gpx",
+        "thumbnail": "http://placehold.it/200x200",
+        "created_at": 1338009325181,
+        "render_mode": "basic"
+    }
+]
