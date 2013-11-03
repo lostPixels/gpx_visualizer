@@ -1,10 +1,6 @@
 <div class="container-fluid edit">
 		<div class="col-md-3 col-sm-4 options">
 			<form role="form">
-				<div class="form-group">
-					<input id="name" type="text" class="form-control" ng-model="ride.title" placeholder="Ride Name"/>
-				</div>
-
 	  			<div class="form-group">
 				  <input class="form-control" type="file" ng-file-select="onFileSelect($files)">
 				</div>
@@ -16,12 +12,20 @@
 			        </select>
 				</div>
 
-				<div class="checkbox">
-				    <label>
-						<input type="checkbox" ng-model="ride.private">Make ride Private
-				    </label>
-			  	</div>
-			  	<button class="btn btn-md">Render Ride</button>
+			  	<div ng-show="ride_viewable">
+
+				  	<div class="form-group">
+						<input id="name" type="text" class="form-control" ng-model="ride.title" placeholder="Ride Name"/>
+					</div>
+
+					<div class="form-group">
+					    <label>
+							<input type="checkbox" ng-model="ride.private">Make ride Private
+					    </label>
+				  	</div>
+
+			  		<button class="btn btn-md" ng-click="saveRide()">Save Ride</button>
+			  </div>
 			</form>
 		</div>
 		<div class="canvas-wrap">

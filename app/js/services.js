@@ -21,9 +21,6 @@ angular.module('gpxRide.services', [])
 					upload:'file_manager.php'
 	},
 
-	rendermodes:[
-					
-				],
 	max_heart_rate:190,
 	conversion_step:2000, //amount of tracks processed in one instance. lower = better results.
 	drawing_step:25,
@@ -54,6 +51,19 @@ angular.module('gpxRide.services', [])
 		this.active_ride = new RideBoilerplate();
 
 		return this.active_ride;
+	}
+
+	function save()
+	{
+		$http({method:'GET',url:ride.gpx, data:{intent:'upload'}})
+			.success(function(data)
+			{
+				cB(data);
+			})
+			.error(function()
+			{
+				cB('cant load gpx');
+			});
 	}
 
 	function loadGPX(ride, cB)
@@ -116,6 +126,15 @@ angular.module('gpxRide.services', [])
 }])
 
 
+
+
+
+
+
+
+
+
+
 .service('$render',function(config,Rides)
 {
 	this.plotter; //directive.
@@ -123,11 +142,16 @@ angular.module('gpxRide.services', [])
 	this.activeRenderer;
 	this.tracks;
 	this.range;
+
+	var _this = this;
 	
 	this.start = function()
 	{
-		this.plotter.clear();
-		Rides.active_ride.render_mode.fn(this.plotter, this.range, this.tracks, this.bounds);
+		if(this.tracks != undefined)
+		{
+			this.plotter.clear();
+			Rides.active_ride.render_mode.fn(this.plotter, this.range, this.tracks, this.bounds);
+		}
 	}
 	this.set = function(plotter, range, tracks)
 	{
@@ -135,6 +159,21 @@ angular.module('gpxRide.services', [])
 		this.bounds = plotter.getBounds();
 		this.tracks = tracks;
 		this.range = range;
+	}
+
+
+
+	function setTypes()
+	{
+			_this.types = [
+			{name:"Circle",fn:_this.circleInfographic},
+			{name:"Basic",fn:_this.basicPlot},
+			{name:"Extruded",fn:_this.extrudedPlot},
+			{name:"Rendered",fn:_this.renderedPlot},
+			{name:"Mountains",fn:_this.mountainPlot},
+			{name:"Wavey",fn:_this.waveyPlot},
+			{name:"Moving",fn:_this.movingPlot}
+		]
 	}
 
 
@@ -178,8 +217,6 @@ angular.module('gpxRide.services', [])
 				if(first){
 					first = false;
 				}
-				//console.log(x)
-				//console.log( lonNV-range.lonRange[0], range.lonRange[1]-range.lonRange[0], bounds.sW ) 
 				plotter.drawPoint(x,y,6*z,c);
 			}
 			offset += config.drawing_step;
@@ -385,6 +422,73 @@ angular.module('gpxRide.services', [])
 
 
 
+
+
+
+	this.movingPlot = function(plotter, range, tracks, bounds)
+	{
+		var totalLength = tracks.length;
+		var offset = 0;
+		var dist;
+		var scale_offset = 1//config.map_padding*3;
+		
+		var first = true;
+		
+		var colorStep = 0;
+		var cD = true;
+		
+		var len = totalLength;
+		if(len > 1500) len = 1500;
+
+		var o = .8;
+		
+		function draw()
+		{
+			theta+=.01;
+			plotter.clear();
+			for(var i=1; i<len; i++)
+			{
+				var os_i = Math.floor( (tracks.length/len)*i);
+				var lonNV = tracks[os_i].lon;
+				var latNV = tracks[os_i].lat;
+				var x = scale_offset+ (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
+				var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
+				var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
+				
+				var rX = Math.cos(theta) * (x-centerX) - Math.sin(theta) *(y-centerY) + centerX;
+				var rY = (Math.sin(theta) * (x-centerX) + Math.cos(theta) *(y-centerY) + centerY);
+				rY = (rY*.2)+centerY;
+
+				plotter.drawPoint(rX,rY,6,"rgba(255,255,255,"+o+")");
+				plotter.drawLine(rX,rY,rX,rY-(200*z),1,"rgba(255,255,255,.5)")
+			}			
+		}
+		
+
+		var distanceFromCentralPoint = 100;
+		var degPerCycle = 5;
+		var theta = 0;
+
+		var centerX = bounds.sW/2;
+		var centerY = bounds.sH/2;
+
+		function degToRad(deg){
+		    var rad = deg * (Math.PI/360);
+		    return rad;
+		}
+
+		var timeout = setInterval(draw,33);
+		draw();
+
+	}
+
+
+
+
+
+
+
+
 	this.renderedPlot = function(plotter, range, tracks, bounds)
 	{
 		var totalLength = tracks.length;
@@ -555,380 +659,19 @@ angular.module('gpxRide.services', [])
 
 
 
-	
 
-	this.types = [
-		{name:"Circle",fn:this.circleInfographic},
-		{name:"Basic",fn:this.basicPlot},
-		{name:"Extruded",fn:this.extrudedPlot},
-		{name:"Rendered",fn:this.renderedPlot},
-		{name:"Mountains",fn:this.mountainPlot},
-		{name:"Wavey",fn:this.waveyPlot}
-	]
+
+	setTypes();
+
+
 })
 
 
-//////////////////////////////////////////// Plotting functions ////////////////////////////////////////////
 
-/*
-function basicPlot(plotter, bounds, range, tracks)
+
+.factory('$gpx',function()
 {
-	var totalLength = tracks.length;
-	var offset = 0;
-	var dist;
-	
-	i = 0;
-	var first = true;
-	
-	var colorStep = 0;
-	var cD = true;
-	plotStep();
-	function plotStep()
-	{
-		dist = offset + config.drawing_step;
-		if(dist > totalLength) dist = totalLength;
-		var first = true;
-		for(i=offset; i<dist; i++)
-		{
-			var lonNV = tracks[i].lon
-			var latNV = tracks[i].lat
-			
-			var x = (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-			var y = (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-			var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
-			var hr_a = tracks[i].hr/config.max_heart_rate;
-			
-			var color = 0;
-			var c = "rgba("+(255*hr_a)+","+color+","+color+",1)"
-			
-			if(colorStep >= 255) cD = false;
-			else if(colorStep <= 0) cD = true;
-			cD ? colorStep++ : colorStep--;
-			
-			if(first){
-				first = false;
-			} 
-			plotter.drawPoint(x,y,6*z,c);
-		}
-		offset += config.drawing_step;
-		if(offset < totalLength) setTimeout(plotStep,10);
-	}
-}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function extrudedPlot(plotter, bounds, range, tracks)
-{
-	var totalLength = tracks.length;
-	var offset = 0;
-	var dist;
-	var scale_offset = config.map_padding/2;
-	
-	i = 0;
-	var first = true;
-	
-	var colorStep = 0;
-	var cD = true;
-	plotStep();
-	function plotStep()
-	{
-		dist = offset + config.drawing_step;
-		if(dist > totalLength) dist = totalLength;
-		var first = true;
-		for(i=offset; i<dist; i++)
-		{
-			var lonNV = tracks[i].lon
-			var latNV = tracks[i].lat
-			
-			var x = scale_offset+ (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-			var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-			var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
-			var hr_a = tracks[i].hr/config.max_heart_rate;
-						
-			if(colorStep >= 255) cD = false;
-			else if(colorStep <= 0) cD = true;
-			cD ? colorStep+=1 : colorStep-=1;
-			
-			var r = 255
-			var g = Math.ceil(10 + (215*z));
-			var b = Math.ceil(10 + (100*z));
-			var c = "rgba("+r+","+g+","+b+",.2)";
-			var eC = "rgba("+r+","+g+","+b+",.1)";
-
-			if(first){
-				//console.log( eC );
-				first = false;
-			}
-			 
-			plotter.drawPoint(x,y,1,c);
-			plotter.drawPoint(x,y - (170*z),3*hr_a,c);
-			plotter.drawLine(  x,  y, x,  y - (170*z),  1,eC)
-		}
-		offset += config.drawing_step;
-		if(offset < totalLength) setTimeout(plotStep,10);
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function circleInfographic(plotter, bounds, range, tracks)
-{
-	
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function renderedPlot(plotter, bounds, range, tracks)
-{
-	var totalLength = tracks.length;
-	var offset = 0;
-	var dist;
-	var scale_offset = config.map_padding/2;
-	
-	var first = true;
-	
-	var colorStep = 0;
-	var cD = true;
-	
-	var len = 300;
-	
-	var cpx = 0;
-	var cpy = 0;
-	
-	var oldX = (tracks[0].lon-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-	var oldY = (tracks[0].lat-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-	var oldZ = (tracks[0].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
-	var under = false;
-	for(i=1; i<len; i++)
-	{
-		var os_i = Math.floor( (tracks.length/len)*i);
-		console.log(os_i)
-		var lonNV = tracks[os_i].lon;
-		var latNV = tracks[os_i].lat;
-		var x = scale_offset+ (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-		var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-		var z = (tracks[os_i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
-		var hr_a = tracks[os_i].hr/config.max_heart_rate;
-	
-		var r = Math.ceil(100 + (155*z));
-		var g = 255
-		var b = 0
-		var c = "rgba("+r+","+g+","+b+",1)";
-		
-		
-		plotter.drawCirc(x,y,15,0,'none',"rgba("+r+","+g+","+b+",.2)");
-		//plotter.drawArc(oldX,oldY,cpx,cpy,x,y,1,c);
-		modY = y -(200*z);
-		plotter.drawCirc(x,modY,1+(2*z),0,c,'none');
-		plotter.drawLine(x,y,x,modY,1,c)
-		
-		oldX = x;
-		oldY = y;
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function mountainPlot(plotter, bounds, range, tracks)
-{
-	var totalLength = tracks.length;
-	var offset = 0;
-	var dist;
-	
-	i = 0;
-	var first = true;
-	
-	var colorStep = 0;
-	var cD = true;
-	plotStep();
-	function plotStep()
-	{
-		dist = offset + config.drawing_step;
-		if(dist > totalLength) dist = totalLength;
-		var first = true;
-		for(i=offset; i<dist; i++)
-		{
-			var lonNV = tracks[i].lon
-			var latNV = tracks[i].lat
-			
-			var x = (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-			var y = 100+(latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-			var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
-			var hr_a = tracks[i].hr/config.max_heart_rate;
-
-			var base = 100 * z
-			var falloff = 25-(25*z);
-			var p1X = x - (base/2) -(falloff)
-			var p1Y = y;
-			var p2X = x;
-			var p2Y = y - base;
-			var p3X = x + (base/2) +(falloff)
-			var p3Y = y;
-			
-			var color = 0;
-			var a = 1//.1 + (.9 * (i/totalLength) );
-
-			var c = "rgba("+(66+parseInt(100*z))+","+(46+parseInt(100*z))+","+(26+parseInt(100*z))+","+a+")"
-			if(colorStep >= 255) cD = false;
-			else if(colorStep <= 0) cD = true;
-			cD ? colorStep++ : colorStep--;
-			
-			if(first){
-				first = false;
-			}
-			var grd = plotter.ctx.createLinearGradient(p1X,p1Y,p2X,p2Y);
-			grd.addColorStop(0,"#598415");
-			grd.addColorStop(1,"82cf08");
-
-			plotter.drawTriangle(p1X,p1Y,p2X,p2Y,p3X,p3Y,2,grd);
-			plotter.drawPoint(x,p2Y,6*z,'rgba(150,238,10,.5');
-		}
-		offset += config.drawing_step;
-		if(offset < totalLength) setTimeout(plotStep,10);
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-function waveyPlot(plotter, bounds, range, tracks)
-{
-	var totalLength = tracks.length;
-	var offset = 0;
-	var dist;
-	var scale_offset = config.map_padding/2;
-	
-	i = 0;
-	var first = true;
-	
-	var colorStep = 0;
-	var cD = true;
-	plotStep();
-
-	var simplified_array = simplifyArray(tracks,10);
-	console.log(simplified_array);
-
-	function plotStep()
-	{
-		dist = offset + config.drawing_step;
-		if(dist > totalLength) dist = totalLength;
-		var first = true;
-		for(i=offset; i<dist; i++)
-		{
-			var lonNV = tracks[i].lon
-			var latNV = tracks[i].lat
-			
-			var x = scale_offset+ (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-			var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-			var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
-			var hr_a = tracks[i].hr/config.max_heart_rate;
-						
-			if(colorStep >= 255) cD = false;
-			else if(colorStep <= 0) cD = true;
-			cD ? colorStep+=1 : colorStep-=1;
-			
-			var r = 255
-			var g = Math.ceil(10 + (215*z));
-			var b = Math.ceil(10 + (100*z));
-			var c = "rgba("+r+","+g+","+b+",.2)";
-			var eC = "rgba("+r+","+g+","+b+",.1)";
-
-			if(first){
-				//console.log( eC );
-				first = false;
-			}
-			 
-			plotter.drawPoint(x,y,1,c);
-			plotter.drawPoint(x,y - (170*z),3*hr_a,c);
-			plotter.drawLine(  x,  y, x,  y - (170*z),  1,eC)
-		}
-		offset += config.drawing_step;
-		if(offset < totalLength) setTimeout(plotStep,10);
-	}
-}
-
-*/
+})

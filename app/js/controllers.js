@@ -38,16 +38,10 @@ angular.module('gpxRide.controllers', [])
         	$render.start();
         }
 
-        function fileUploaded(data)
+        $scope.saveRide = function()
         {
-        	ride.gpx = data.file_path;
-	       
-        	Rides.loadGPX(ride,function(data) //This is a blocking function
-        	{
-        		parseGPX(data);
-        	}); 
-        }
 
+        }
 
         $scope.onFileSelect = function($files) {
 			$scope.uploadResult = [];
@@ -78,6 +72,7 @@ angular.module('gpxRide.controllers', [])
 							fileUploaded(data);
 						}
 						else{
+							console.warn(data,status,headers)
 							alert('issue uploading file!');
 						}
 					});
@@ -85,7 +80,16 @@ angular.module('gpxRide.controllers', [])
 			}
 		}
 
-
+		function fileUploaded(data)
+        {
+        	ride.gpx = data.file_path;
+	       
+        	Rides.loadGPX(ride,function(data) //This is a blocking function
+        	{
+        		$scope.ride_viewable = true;
+        		parseGPX(data);
+        	}); 
+        }
 
 
 		function parseGPX(xml)
@@ -197,8 +201,7 @@ angular.module('gpxRide.controllers', [])
 						"centerLong" : lonRange[1] - (lonRange[0]/2)
 					}
 
-					//$(".status-text").html("<strong>lowest points:</strong>"+lonRange[0]+","+latRange[0]+" <br><strong>highest points:</strong>"+lonRange[1]+","+latRange[1]+"<br> length: "+tracks_ar.length);
-					tracks_ar.sort(sortByLat);
+					//tracks_ar.sort(sortByLat);
 					cB({"lonRange":lonRange, "latRange":latRange, "eleRange":eleRange, "center":center},tracks_ar);
 				}
 			}
@@ -247,5 +250,8 @@ angular.module('gpxRide.controllers', [])
 
 
 	.controller('viewCtrl', [function() {
+
+
+		
 
 	}]);
