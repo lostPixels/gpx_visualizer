@@ -4,6 +4,10 @@
 
 
 angular.module('gpxRide.directives', [])
+
+
+
+
 .directive('ngFileSelect', ['$parse', '$http',
 	function($parse, $http) {
 		return function(scope, elem, attr) {
@@ -84,7 +88,7 @@ angular.module('gpxRide.directives', [])
 	])
 
 
-.directive('drawingCanvas', function(config){
+.directive('drawingCanvas', function(config, $render){
 	// Runs during compile
 	return {
 		// name: '',
@@ -123,7 +127,7 @@ angular.module('gpxRide.directives', [])
 				ctx = canvas.getContext("2d");
 			}
 			else{
-				alert("canvas not supported")
+				alert("canvas not supported");
 			}
 
 			$scope.drawingtools = {};
@@ -188,9 +192,37 @@ angular.module('gpxRide.directives', [])
 			}
 			$scope.drawingtools.getBounds = function()
 			{
-
-				return {   "sW":iElm[0].clientWidth-config.map_padding,   "sH":iElm[0].clientHeight-config.map_padding    }
+				return {   "sW":iElm[0].clientWidth,   "sH":iElm[0].clientHeight    }
 			}
+
+
+			
+			$scope.theta = { x:0,y:0 }
+
+			var startTheta = { x:0,y:0 }
+			var startPoint = { x:0,y:0 }
+
+
+			function adjustTheta(e)
+			{
+				$scope.theta.x = startTheta.x + (startPoint.x - e.offsetX);
+				$scope.theta.y = startTheta.y + (startPoint.y - e.offsetY);
+
+				$render.adjustTheta($scope.theta.x, $scope.theta.y);
+			}
+
+			iElm.on('mousedown',function(e)
+			{
+				startPoint = { x:e.offsetX, y:e.offsetY }
+				startTheta = {x:$scope.theta.x, y:$scope.theta.y}
+
+				iElm.on('mousemove',adjustTheta);
+				w.on('mouseup',function()
+				{
+					iElm.unbind('mousemove',adjustTheta);
+				})
+			})
+
 
 			$scope.drawFn({plotFn:$scope.drawingtools});
 		}

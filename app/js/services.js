@@ -1,5 +1,9 @@
 'use strict';
 
+///////////////////////////////
+//Basis of a new ride object //
+///////////////////////////////
+
 function RideBoilerplate()
 {
 	this.title = '';
@@ -7,31 +11,55 @@ function RideBoilerplate()
 	this.gpx = '';
 	this.thumbnail = 'default.jpg';
 	this.render_mode = 'basic';
-	this.private = 'false';
+	this.private = false;
 }
 
-/* Services */
+/////////////
+//Services //
+/////////////
 
 angular.module('gpxRide.services', [])
+
 
 .value('config',{
 
 	urls:{
 					rides:'mock_data/rides.json',
-					upload:'file_manager.php'
+					api:'file_manager.php',
+					root:'http://localhost/gpx_visualizer/app/'
 	},
 
 	max_heart_rate:190,
-	conversion_step:2000, //amount of tracks processed in one instance. lower = better results.
+	conversion_step:2000,
+	preview_iteration:500,
+	render_iteration:2000, //amount of tracks processed in one instance. lower = better results.
 	drawing_step:25,
 	clarity:1, //larger the number, more approximated the map is. Also better preformance.
 	map_padding:225
 })
 
 
-.factory('Rides',function($http, config, $q)
+.service('$Error',function()
+{
+	this.throw = function(type,resolve)
+	{
+		console.warn("ERROR:",type);
+		resolve();
+	}
+})
+
+
+
+/**
+ * Rides manages the ride object, including saving rides and loading them.
+ */
+
+.factory('Rides',function($http, config, $q, $Error)
 {
 	this.active_ride;
+	var _this = this;
+
+
 	function loadList()
 	{
 		$http('GET', config.urls.rides)
@@ -41,9 +69,25 @@ angular.module('gpxRide.services', [])
 		})
 	}
 
-	function getByID()
+	function getByID(id)
 	{
-
+		var defer = $q.defer();
+		$http({method:'POST',url: config.urls.api,
+				 data:{
+				 	intent:'find',
+				 	id:id
+				 }
+			})
+		.success(function(data)
+		{
+			_this.active_ride = data.ride[0];
+			defer.resolve( _this.active_ride );
+		})
+		.error(function()
+		{
+			defer.reject('error finding ride');
+		})
+		return defer.promise;
 	}
 
 	function create()
@@ -53,30 +97,39 @@ angular.module('gpxRide.services', [])
 		return this.active_ride;
 	}
 
+	/**
+	 * Saves the active ride and the associated form data.
+	 * @return promise
+	 */
 	function save()
 	{
-		$http({method:'GET',url:ride.gpx, data:{intent:'upload'}})
-			.success(function(data)
-			{
-				cB(data);
-			})
-			.error(function()
-			{
-				cB('cant load gpx');
+		return $http({method:'POST',url: config.urls.api,
+				 data:{
+				 	intent:'save',
+				 	title:  this.active_ride.title,
+				 	private:  this.active_ride.private,
+				 	thumbnail:'',
+				 	settings:''
+				 }
 			});
 	}
 
-	function loadGPX(ride, cB)
+	/**
+	 * Loads the GPX file of a ride.
+	 * @param  {[type]} ride
+	 * @param  {[type]} cB
+	 * @return {[type]}
+	 */
+	function loadGPX(ride_url, cB)
 	{
-		console.log('Load: ',ride.gpx,cB)
-		$http({method:'GET',url:ride.gpx})
+		$http({method:'GET',url:ride_url})
 			.success(function(data)
 			{
 				cB(data);
 			})
 			.error(function()
 			{
-				cB('cant load gpx');
+				$Error.throw("Couldn't load your ride.");
 			});
 	}
 
@@ -94,7 +147,8 @@ angular.module('gpxRide.services', [])
 			}
 		},
 		create:create,
-		loadGPX:loadGPX
+		loadGPX:loadGPX,
+		save:save
 
 	}
 
@@ -127,15 +181,137 @@ angular.module('gpxRide.services', [])
 
 
 
+.service('$gpx',function(config, $q)
+{
+
+	this.parse = function(xml)
+	{
+		var defer = $q.defer();
+
+		var xml = parseXml(xml);
+		var tracks = xml.getElementsByTagName('trkpt');
+		convertData(tracks,function(range,tracks_ar)
+		{
+			defer.resolve({tracks:tracks_ar, range:range});
+		});
+		return defer.promise;
+	}
+
+	function convertData(tracks,cB)
+	{
+		var lonRange = [parseFloat(tracks[1].attributes.getNamedItem("lon").nodeValue) , parseFloat(tracks[1].attributes.getNamedItem("lon").nodeValue)];
+		var latRange = [parseFloat(tracks[1].attributes.getNamedItem("lat").nodeValue) , parseFloat(tracks[1].attributes.getNamedItem("lat").nodeValue)];
+		var eleRange = [parseFloat(tracks[1].childNodes[1].textContent),parseFloat(tracks[1].childNodes[1].textContent)];
+		var totalLength = Math.ceil(tracks.length);
+		var offset = 0;
+		
+		var dist;
+		var tracks_ar = Array();
+		analyze();
+		function analyze()
+		{
+			dist = offset + config.conversion_step;
+			if(dist > totalLength) dist = totalLength;
+			var lon;
+			var lat;
+			for(var i=offset; i<dist; i+=config.clarity)
+			{
+				var tmp = new Object();
+				tmp.lon = parseFloat(tracks[i].attributes.getNamedItem("lon").nodeValue);
+				tmp.lat = parseFloat(tracks[i].attributes.getNamedItem("lat").nodeValue);
+				tmp.ele = tracks[i].childNodes[1].textContent;
+				if(tracks[i].childNodes[5].childNodes[1].childNodes[3]) //Add Heart Rate!
+				{
+					tmp.hr = parseFloat( tracks[i].childNodes[5].childNodes[1].childNodes[3].textContent );
+				}
+				else{
+					tmp.hr = 0;
+				}
+				if(tracks[i].childNodes[5].childNodes[1].childNodes[5]) //Add Cadance!
+				{
+					tmp.cad = parseFloat(tracks[i].childNodes[5].childNodes[1].childNodes[5].textContent);
+				}
+				else{
+					tmp.cad = 0;
+				}
+				tracks_ar.push(tmp);
+				// Is this a new min or max longitude?
+				if( tmp.lon < lonRange[0]  )
+				{
+					lonRange[0] = tmp.lon;
+				}
+				else if(tmp.lon > lonRange[1])
+				{
+					lonRange[1] = tmp.lon;
+				}
+				// Is this a new min or max latitude?
+				if( tmp.lat < latRange[0]  )
+				{
+					latRange[0] = tmp.lat;
+				}
+				else if(tmp.lat > latRange[1])
+				{
+					latRange[1] = tmp.lat;
+				}
+				// Is this a new min or max elevation?
+				if(tmp.ele < eleRange[0])
+				{
+					eleRange[0] = parseFloat(tmp.ele);
+				}
+				else if(tmp.ele > eleRange[1])
+				{
+					eleRange[1] = parseFloat(tmp.ele);
+				}
+			}
+			offset += config.conversion_step;
+			if(offset < totalLength) setTimeout(analyze,40);
+			else{
+
+				var center = {
+					"centerLat" : latRange[1] - (latRange[0]/2),
+					"centerLong" : lonRange[1] - (lonRange[0]/2)
+				}
+
+				//tracks_ar.sort(sortByLat);
+
+				cB({"lonRange":lonRange, "latRange":latRange, "eleRange":eleRange, "center":center},tracks_ar);
+			}
+		}
+	}
+
+	function sortByLon(a,b) {
+	  return parseInt(a.lon) - parseInt(b.lon);
+	}
+	function sortByLat(a,b) {
+	  return parseFloat(a.lat) - parseFloat(b.lat);
+	}
+
+
+
+	var parseXml;
+	if (typeof window.DOMParser != "undefined") {
+	    parseXml = function(xmlStr) {
+	        return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
+	    };
+	} else if (typeof window.ActiveXObject != "undefined" &&
+	       new window.ActiveXObject("Microsoft.XMLDOM")) {
+	    parseXml = function(xmlStr) {
+	        var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
+	        xmlDoc.async = "false";
+	        xmlDoc.loadXML(xmlStr);
+	        return xmlDoc;
+	    };
+	} else {
+	    throw new Error("No XML parser found");
+	}
+})
 
 
 
 
 
 
-
-
-.service('$render',function(config,Rides)
+.service('$render',function(config,Rides,$helper)
 {
 	this.plotter; //directive.
 	this.bounds = {};
@@ -144,13 +320,15 @@ angular.module('gpxRide.services', [])
 	this.range;
 
 	var _this = this;
+
+	var adjustmentFunction = null;
 	
 	this.start = function()
 	{
-		if(this.tracks != undefined)
+		if(_this.tracks != undefined)
 		{
-			this.plotter.clear();
-			Rides.active_ride.render_mode.fn(this.plotter, this.range, this.tracks, this.bounds);
+			_this.plotter.clear();
+			Rides.active_ride.render_mode.fn(_this.plotter, _this.range, _this.tracks, _this.bounds);
 		}
 	}
 	this.set = function(plotter, range, tracks)
@@ -159,6 +337,10 @@ angular.module('gpxRide.services', [])
 		this.bounds = plotter.getBounds();
 		this.tracks = tracks;
 		this.range = range;
+	}
+	this.adjustTheta = function(x,y)
+	{
+		adjustmentFunction(x,y);
 	}
 
 
@@ -438,36 +620,63 @@ angular.module('gpxRide.services', [])
 		var cD = true;
 		
 		var len = totalLength;
-		if(len > 1500) len = 1500;
-
+		
+		if(len > config.render_iteration) len = config.render_iteration;
 		var o = .8;
+
+		var render_ar = [];
+
+		function preprocess()
+		{
+			var ar = $helper.simplifyArray(tracks, config.render_iteration);
+			for(var i=0; i<config.render_iteration; i++)
+			{
+				var lonNV = ar[i].lon;
+				var latNV = ar[i].lat;
+				var x = (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
+				var y = (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
+				var z = (ar[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
+
+				var r = 255
+				var g = Math.ceil(10 + (215*z));
+				var b = Math.ceil(10 + (100*z));
+				var rgb = "rgba("+r+","+g+","+b+",.5)";
+				
+
+				render_ar.push([x,y,z,rgb]);
+			}
+		}
+		preprocess();
+
+
 		
 		function draw()
 		{
-			theta+=.01;
 			plotter.clear();
-			for(var i=1; i<len; i++)
+			//theta+=.01;
+			var x,y,z,c;
+			for(var i=0; i<render_ar.length; i++)
 			{
-				var os_i = Math.floor( (tracks.length/len)*i);
-				var lonNV = tracks[os_i].lon;
-				var latNV = tracks[os_i].lat;
-				var x = scale_offset+ (lonNV-range.lonRange[0]) / (range.lonRange[1]-range.lonRange[0]) * bounds.sW;
-				var y = scale_offset+ (latNV-range.latRange[0]) / (range.latRange[1]-range.latRange[0]) * bounds.sH;
-				var z = (tracks[i].ele - range.eleRange[0]) / (range.eleRange[1]-range.eleRange[0]);
+				//var os_i = Math.floor( (tracks.length/len)*i);
+				x = render_ar[i][0];
+				y = render_ar[i][1];
+				z = render_ar[i][2];
+				c = render_ar[i][3]
 				
 				var rX = Math.cos(theta) * (x-centerX) - Math.sin(theta) *(y-centerY) + centerX;
 				var rY = (Math.sin(theta) * (x-centerX) + Math.cos(theta) *(y-centerY) + centerY);
-				rY = (rY*.2)+centerY;
-
-				plotter.drawPoint(rX,rY,6,"rgba(255,255,255,"+o+")");
-				plotter.drawLine(rX,rY,rX,rY-(200*z),1,"rgba(255,255,255,.5)")
+				var rZ = (170*z);
+				rY = (rY*yScale)+centerY;
+				 
+				plotter.drawPoint(rX,rY,1,c);
+				plotter.drawPoint(rX,rY - rZ,3,c);
+				plotter.drawLine(  rX,  rY, rX,  rY - rZ,  1,c)
+				
 			}			
 		}
 		
-
-		var distanceFromCentralPoint = 100;
-		var degPerCycle = 5;
 		var theta = 0;
+		var yScale = .2;
 
 		var centerX = bounds.sW/2;
 		var centerY = bounds.sH/2;
@@ -477,7 +686,15 @@ angular.module('gpxRide.services', [])
 		    return rad;
 		}
 
-		var timeout = setInterval(draw,33);
+		adjustmentFunction = function(x,y)
+		{
+			theta = x/500;
+			yScale = y/-1000;
+			if(yScale > 1) yScale = 1;
+			draw();
+		}
+
+		//var timeout = setInterval(draw,33);
 		draw();
 
 	}
@@ -667,123 +884,9 @@ angular.module('gpxRide.services', [])
 })
 
 
-
-
-.service('$gpx',function(config, $q)
+.service('$helper',function()
 {
-
-	this.parse = function(xml)
-	{
-		var defer = $q.defer();
-
-		var xml = parseXml(xml);
-		var tracks = xml.getElementsByTagName('trkpt');
-		convertData(tracks,function(range,tracks_ar)
-		{
-			defer.resolve({tracks:tracks_ar, range:range});
-			//return {tracks:tracks_ar, range:range};
-			//plotPoints(tracks_ar,range);
-		});
-		return defer.promise;
-	}
-
-
-
-
-	function convertData(tracks,cB)
-	{
-		var lonRange = [parseFloat(tracks[1].attributes.getNamedItem("lon").nodeValue) , parseFloat(tracks[1].attributes.getNamedItem("lon").nodeValue)];
-		var latRange = [parseFloat(tracks[1].attributes.getNamedItem("lat").nodeValue) , parseFloat(tracks[1].attributes.getNamedItem("lat").nodeValue)];
-		var eleRange = [parseFloat(tracks[1].childNodes[1].textContent),parseFloat(tracks[1].childNodes[1].textContent)];
-		var totalLength = Math.ceil(tracks.length);
-		var offset = 0;
-		
-		var dist;
-		var tracks_ar = Array();
-		analyze();
-		function analyze()
-		{
-			//$(".status-text").html("Analyzing range: "+offset+" of "+totalLength/constants.clarity);
-			dist = offset + config.conversion_step;
-			if(dist > totalLength) dist = totalLength;
-			var lon;
-			var lat;
-			for(var i=offset; i<dist; i+=config.clarity)
-			{
-				var tmp = new Object();
-				tmp.lon = parseFloat(tracks[i].attributes.getNamedItem("lon").nodeValue);
-				tmp.lat = parseFloat(tracks[i].attributes.getNamedItem("lat").nodeValue);
-				tmp.ele = tracks[i].childNodes[1].textContent;
-				if(tracks[i].childNodes[5].childNodes[1].childNodes[3]) //Add Heart Rate!
-				{
-					tmp.hr = parseFloat( tracks[i].childNodes[5].childNodes[1].childNodes[3].textContent );
-				}
-				else{
-					tmp.hr = 0;
-				}
-				if(tracks[i].childNodes[5].childNodes[1].childNodes[5]) //Add Cadance!
-				{
-					//tmp.cad = parseFloat( tracks[i].childNodes[5].childNodes[1].childNodes[5].textContent );
-					tmp.cad = parseFloat(tracks[i].childNodes[5].childNodes[1].childNodes[5].textContent);
-				}
-				else{
-					tmp.cad = 0;
-				}
-				
-				tracks_ar.push(tmp);
-				// Is this a new min or max longitude?
-				if( tmp.lon < lonRange[0]  )
-				{
-					lonRange[0] = tmp.lon;
-				}
-				else if(tmp.lon > lonRange[1])
-				{
-					lonRange[1] = tmp.lon;
-				}
-				// Is this a new min or max latitude?
-				if( tmp.lat < latRange[0]  )
-				{
-					latRange[0] = tmp.lat;
-				}
-				else if(tmp.lat > latRange[1])
-				{
-					latRange[1] = tmp.lat;
-				}
-				// Is this a new min or max elevation?
-				if(tmp.ele < eleRange[0])
-				{
-					eleRange[0] = parseFloat(tmp.ele);
-				}
-				else if(tmp.ele > eleRange[1])
-				{
-					eleRange[1] = parseFloat(tmp.ele);
-				}
-			}
-			offset += config.conversion_step;
-			if(offset < totalLength) setTimeout(analyze,40);
-			else{
-
-				var center = {
-					"centerLat" : latRange[1] - (latRange[0]/2),
-					"centerLong" : lonRange[1] - (lonRange[0]/2)
-				}
-
-				//tracks_ar.sort(sortByLat);
-				cB({"lonRange":lonRange, "latRange":latRange, "eleRange":eleRange, "center":center},tracks_ar);
-			}
-		}
-	}
-
-	function sortByLon(a,b) {
-	  return parseInt(a.lon) - parseInt(b.lon);
-	}
-	function sortByLat(a,b) {
-	  return parseFloat(a.lat) - parseFloat(b.lat);
-	}
-
-
-
-	function simplifyArray(ar,newLength)
+	this.simplifyArray = function(ar,newLength)
 	{
 		var len = ar.length;
 		var tmp = new Array();
@@ -794,25 +897,4 @@ angular.module('gpxRide.services', [])
 		}
 		return tmp;
 	}
-
-
-
-	var parseXml;
-	if (typeof window.DOMParser != "undefined") {
-	    parseXml = function(xmlStr) {
-	        return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
-	    };
-	} else if (typeof window.ActiveXObject != "undefined" &&
-	       new window.ActiveXObject("Microsoft.XMLDOM")) {
-	    parseXml = function(xmlStr) {
-	        var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
-	        xmlDoc.async = "false";
-	        xmlDoc.loadXML(xmlStr);
-	        return xmlDoc;
-	    };
-	} else {
-	    throw new Error("No XML parser found");
-	}
-
-
 })

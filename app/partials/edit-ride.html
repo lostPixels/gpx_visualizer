@@ -25,6 +25,11 @@
 				  	</div>
 
 			  		<button class="btn btn-md" ng-click="saveRide()">Save Ride</button>
+
+			  		<div ng-show="ride.url">
+			  			<input id="ride-url" type="text" class="form-control" ng-model="ride.url"/>
+			  		</div>
+
 			  </div>
 			</form>
 		</div>

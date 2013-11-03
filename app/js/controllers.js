@@ -44,7 +44,16 @@ angular.module('gpxRide.controllers', [])
 
         $scope.saveRide = function()
         {
-
+        	Rides.save()
+        	.success(function(data)
+        	{
+        		console.log("Ride Saved",data)
+        		ride.url = config.urls.root+"#/ride/"+data.id;
+        	})
+        	.error(function(data)
+        	{
+        		console.warn("ERROR: Ride not saved",data)
+        	})
         }
 
         $scope.onFileSelect = function($files) {
@@ -88,22 +97,23 @@ angular.module('gpxRide.controllers', [])
         {
         	ride.gpx = data.file_path;
 	       
-        	Rides.loadGPX(ride,function(data) //This is a blocking function
+        	Rides.loadGPX(data.file_path,function(data) //This is a blocking function
         	{
         		$scope.ride_viewable = true;
         		
         		$gpx.parse(data)
         		.then(function(result){
-        			plotPoints(result.tracks, result.range);
+        			//plotPoints(result.tracks, result.range);
+        			$render.set($scope.Plotter, result.range, result.tracks);
         		})
         		
         	}); 
         }
 		
-		function plotPoints(tracks, range)
-		{
-			$render.set($scope.Plotter, range, tracks);
-		}
+		// function plotPoints(tracks, range)
+		// {
+		// 	$render.set($scope.Plotter, range, tracks);
+		// }
 
 	}])
 
@@ -116,9 +126,33 @@ angular.module('gpxRide.controllers', [])
 
 
 
-	.controller('viewCtrl', [function() {
+	.controller('viewCtrl', ['$scope','Rides','$routeParams','$gpx','$render',function($scope,Rides,$routeParams,$gpx,$render) {
 
-
+		var promise = Rides.get($routeParams.id);
 		
+		promise.then(function(ride)
+		{
+			$scope.ride = ride;
+			console.log("load:",ride.file_url)
+			Rides.loadGPX(ride.file_url,function(data) //This is a blocking function
+        	{
+        		$scope.ride_viewable = true;
+        		
+        		$gpx.parse(data)
+        		.then(function(result){
+        			$render.set($scope.Plotter, result.range, result.tracks);
+        		})
+        		
+        	}); 
+		})
+
+		$scope.setPlotter = function(Plotter)
+        {
+        	$scope.Plotter = Plotter;
+        }
+        $scope.render = function()
+        {
+        	$render.start();
+        }
 
 	}]);
