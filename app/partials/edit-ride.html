@@ -7,8 +7,9 @@
 
 	  			<div class="form-group">
 					<label for="render-technique">Render as:</label>
-					<select class="form-control" ng-model="ride.render_mode" ng-options="r.name for r in rendermodes" ng-change="render()">
+					<select class="form-control" ng-model="ride.settings.render_mode" ng-change="render()">
 			          	<option value="">-- choose mode --</option>
+			          	<option ng-repeat="r in rendermodes">{{r.name}}</option>
 			        </select>
 				</div>
 

@@ -29,7 +29,6 @@ angular.module('gpxRide.controllers', [])
 		$scope.ride = ride;
 		$scope.rendermodes = $render.types;
 
-
 		$scope.selectedFiles = [];
         $scope.progress = [];
 
@@ -44,6 +43,7 @@ angular.module('gpxRide.controllers', [])
 
         $scope.saveRide = function()
         {
+        	var options = {render_mode:$scope.render_mode, }
         	Rides.save()
         	.success(function(data)
         	{
@@ -109,12 +109,6 @@ angular.module('gpxRide.controllers', [])
         		
         	}); 
         }
-		
-		// function plotPoints(tracks, range)
-		// {
-		// 	$render.set($scope.Plotter, range, tracks);
-		// }
-
 	}])
 
 

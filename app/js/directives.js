@@ -88,7 +88,7 @@ angular.module('gpxRide.directives', [])
 	])
 
 
-.directive('drawingCanvas', function(config, $render){
+.directive('drawingCanvas', function(config, $render, $rootScope){
 	// Runs during compile
 	return {
 		// name: '',
@@ -216,10 +216,13 @@ angular.module('gpxRide.directives', [])
 				startPoint = { x:e.offsetX, y:e.offsetY }
 				startTheta = {x:$scope.theta.x, y:$scope.theta.y}
 
+				$rootScope.$broadcast('canvas-begin-adjust');
+
 				iElm.on('mousemove',adjustTheta);
 				w.on('mouseup',function()
 				{
 					iElm.unbind('mousemove',adjustTheta);
+					$rootScope.$broadcast('canvas-end-adjust');
 				})
 			})
 

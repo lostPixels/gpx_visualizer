@@ -1,0 +1,40 @@
+[
+  {
+    "featureType": "water",
+    "stylers": [
+      { "saturation": -100 },
+      { "lightness": -82 }
+    ]
+  },{
+    "featureType": "landscape",
+    "stylers": [
+      { "saturation": -100 },
+      { "lightness": -77 },
+      { "visibility": "on" }
+    ]
+  },{
+    "featureType": "administrative",
+    "stylers": [
+      { "invert_lightness": true },
+      { "saturation": -100 },
+      { "lightness": -46 }
+    ]
+  },{
+    "featureType": "poi",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },{
+    "featureType": "road",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },{
+  },{
+    "featureType": "poi",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },{
+  }
+]

@@ -10,7 +10,7 @@ function RideBoilerplate()
 	this.author = 'James';
 	this.gpx = '';
 	this.thumbnail = 'default.jpg';
-	this.render_mode = 'basic';
+	this.settings = {render_mode:'',theta:0,yScale:''};
 	this.private = false;
 }
 
@@ -32,7 +32,7 @@ angular.module('gpxRide.services', [])
 	max_heart_rate:190,
 	conversion_step:2000,
 	preview_iteration:500,
-	render_iteration:2000, //amount of tracks processed in one instance. lower = better results.
+	render_iteration:5000, //amount of tracks processed in one instance. lower = better results.
 	drawing_step:25,
 	clarity:1, //larger the number, more approximated the map is. Also better preformance.
 	map_padding:225
@@ -109,7 +109,7 @@ angular.module('gpxRide.services', [])
 				 	title:  this.active_ride.title,
 				 	private:  this.active_ride.private,
 				 	thumbnail:'',
-				 	settings:''
+				 	settings:this.active_ride.settings
 				 }
 			});
 	}
@@ -272,6 +272,7 @@ angular.module('gpxRide.services', [])
 					"centerLong" : lonRange[1] - (lonRange[0]/2)
 				}
 
+
 				//tracks_ar.sort(sortByLat);
 
 				cB({"lonRange":lonRange, "latRange":latRange, "eleRange":eleRange, "center":center},tracks_ar);
@@ -311,7 +312,7 @@ angular.module('gpxRide.services', [])
 
 
 
-.service('$render',function(config,Rides,$helper)
+.service('$render',function(config,Rides,$helper, $rootScope,$Error)
 {
 	this.plotter; //directive.
 	this.bounds = {};
@@ -328,7 +329,32 @@ angular.module('gpxRide.services', [])
 		if(_this.tracks != undefined)
 		{
 			_this.plotter.clear();
-			Rides.active_ride.render_mode.fn(_this.plotter, _this.range, _this.tracks, _this.bounds);
+			
+
+			/**
+			 * Looks up the function associated with the name of a render mode.
+			 */
+			var found = false;
+			var render_name = Rides.active_ride.settings.render_mode;
+			var render_fn;
+			for(var i = 0; i<_this.types.length && !found; i++)
+			{
+				if(render_name == _this.types[i].name)
+				{
+					found = true;
+					render_fn = _this.types[i].fn;
+				}
+			}
+
+			//Run the function.
+			if(render_fn)
+			{
+				render_fn(_this.plotter, _this.range, _this.tracks, _this.bounds);
+			}
+			else{
+				$Error.throw("Can't find that render mode.");
+			}
+			
 		}
 	}
 	this.set = function(plotter, range, tracks)
@@ -342,7 +368,6 @@ angular.module('gpxRide.services', [])
 	{
 		adjustmentFunction(x,y);
 	}
-
 
 
 	function setTypes()
@@ -610,25 +635,30 @@ angular.module('gpxRide.services', [])
 	this.movingPlot = function(plotter, range, tracks, bounds)
 	{
 		var totalLength = tracks.length;
-		var offset = 0;
-		var dist;
-		var scale_offset = 1//config.map_padding*3;
-		
-		var first = true;
-		
-		var colorStep = 0;
-		var cD = true;
-		
-		var len = totalLength;
-		
-		if(len > config.render_iteration) len = config.render_iteration;
-		var o = .8;
 
-		var render_ar = [];
+		var scale_offset = 1//config.map_padding*3;
+				
+		var len = totalLength;
+		var theta = 0;
+		var yScale = .2;
+
+		var centerX = bounds.sW/2;
+		var centerY = bounds.sH/2;
+		
+
+		var full_quality_ar = [];
+		preprocess();
+		var quick_ar = $helper.simplifyArray(full_quality_ar, config.preview_iteration);
+
+		var render_ar = full_quality_ar; //Switches based on quality needed.
+
+		console.log("render ar:",full_quality_ar.length, 'quick ar:',quick_ar.length)
 
 		function preprocess()
 		{
 			var ar = $helper.simplifyArray(tracks, config.render_iteration);
+
+			console.log("UHM",ar.length)
 			for(var i=0; i<config.render_iteration; i++)
 			{
 				var lonNV = ar[i].lon;
@@ -641,14 +671,9 @@ angular.module('gpxRide.services', [])
 				var g = Math.ceil(10 + (215*z));
 				var b = Math.ceil(10 + (100*z));
 				var rgb = "rgba("+r+","+g+","+b+",.5)";
-				
-
-				render_ar.push([x,y,z,rgb]);
+				full_quality_ar.push([x,y,z,rgb]);
 			}
 		}
-		preprocess();
-
-
 		
 		function draw()
 		{
@@ -657,7 +682,6 @@ angular.module('gpxRide.services', [])
 			var x,y,z,c;
 			for(var i=0; i<render_ar.length; i++)
 			{
-				//var os_i = Math.floor( (tracks.length/len)*i);
 				x = render_ar[i][0];
 				y = render_ar[i][1];
 				z = render_ar[i][2];
@@ -675,12 +699,6 @@ angular.module('gpxRide.services', [])
 			}			
 		}
 		
-		var theta = 0;
-		var yScale = .2;
-
-		var centerX = bounds.sW/2;
-		var centerY = bounds.sH/2;
-
 		function degToRad(deg){
 		    var rad = deg * (Math.PI/360);
 		    return rad;
@@ -694,7 +712,18 @@ angular.module('gpxRide.services', [])
 			draw();
 		}
 
-		//var timeout = setInterval(draw,33);
+		$rootScope.$on('canvas-begin-adjust',function(e)
+		{
+			render_ar = quick_ar;
+			draw();
+		})
+
+		$rootScope.$on('canvas-end-adjust',function(e)
+		{
+			render_ar = full_quality_ar;
+			draw();
+		})
+
 		draw();
 
 	}
@@ -888,6 +917,7 @@ angular.module('gpxRide.services', [])
 {
 	this.simplifyArray = function(ar,newLength)
 	{
+		
 		var len = ar.length;
 		var tmp = new Array();
 		for(var i = 1; i<=newLength;i++)
@@ -896,5 +926,6 @@ angular.module('gpxRide.services', [])
 			tmp.push(  ar[s] );
 		}
 		return tmp;
+		
 	}
 })
